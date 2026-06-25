@@ -34,6 +34,7 @@ document's CRDT roots (`layers`, `sources`, `options`, `layerTree`,
     \item \href{#method-GISDocument-add_raster_layer}{\code{GISDocument$add_raster_layer()}}
     \item \href{#method-GISDocument-add_vectortile_layer}{\code{GISDocument$add_vectortile_layer()}}
     \item \href{#method-GISDocument-add_geojson_layer}{\code{GISDocument$add_geojson_layer()}}
+    \item \href{#method-GISDocument-add_image_layer}{\code{GISDocument$add_image_layer()}}
     \item \href{#method-GISDocument-clone}{\code{GISDocument$clone()}}
   }
 }
@@ -182,6 +183,36 @@ ephemeral in-memory document.}
       \item{\code{path}}{The path to the JSON file or URL to embed into the jGIS file.}
       \item{\code{data}}{The raw GeoJSON data to embed into the jGIS file}
       \item{\code{name}}{The name that will be used for the object in the document.}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_image_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_image_layer}{}}}
+\subsection{\code{GISDocument$add_image_layer()}}{
+  Add a Image Layer to the document.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_image_layer(
+  url = NULL,
+  coordinates = NULL,
+  name = NULL,
+  opacity = 1
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{url}}{Image URL.}
+      \item{\code{coordinates}}{Corners of image specified in longitude, latitude pairs.}
+      \item{\code{name}}{Display name for the layer.}
       \item{\code{opacity}}{Layer opacity in [0, 1].}
     }
     \if{html}{\out{</div>}}

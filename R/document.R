@@ -82,6 +82,27 @@
   if (nzchar(name_without_ext)) name_without_ext else filename
 }
 
+.normalize_coordinates <- function(coordinates) {
+  if (is.matrix(coordinates)) {
+    coordinates <- lapply(seq_len(nrow(coordinates)), function(i) {
+      coordinates[i, ]
+    })
+  } else if (!is.list(coordinates)) {
+    stop(
+      "`coordinates` must be a list of [lon, lat] pairs or an n x 2 matrix"
+    )
+  }
+  lapply(coordinates, function(pair) {
+    pair <- as.numeric(pair)
+    # force doubles (avoid BigInt for ints)
+    if (length(pair) != 2L || anyNA(pair)) {
+      stop("Each coordinate must be a numeric [lon, lat] pair")
+    }
+    list(pair[[1]], pair[[2]])
+    # list of 2 scalars -> JSON [lon, lat]
+  })
+}
+
 #' JupyterGIS document
 #'
 #' Comm-backed widget mirroring `jupytergis_lab.GISDocument`. Exposes the
@@ -323,7 +344,7 @@ GISDocument <- R6::R6Class(
 
       # Fallback if still missing
       if (is.null(name)) {
-        name <- "GeoJSON Layer"
+        name <- "GeoJSON"
       }
 
       source_id <- .uuid()
@@ -337,6 +358,53 @@ GISDocument <- R6::R6Class(
 
       layer <- list(
         type = "VectorLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = opacity
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Add a Image Layer to the document.
+    #' @param url Image URL.
+    #' @param coordinates Corners of image specified in longitude, latitude pairs.
+    #' @param name Display name for the layer.
+    #' @param opacity Layer opacity in [0, 1].
+    #' @return The new layer id.
+    add_image_layer = function(
+      url = NULL,
+      coordinates = NULL,
+      name = NULL,
+      opacity = 1
+    ) {
+      if (is.null(url) || is.null(coordinates)) {
+        stop("URL and Coordinates are required")
+      }
+
+      coordinates <- .normalize_coordinates(coordinates)
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      if (is.null(name)) {
+        name <- .extract_layer_name(url)
+      }
+
+      source <- list(
+        type = "ImageSource",
+        name = paste0(name, " Source"),
+        parameters = list(
+          path = url,
+          coordinates = coordinates
+        )
+      )
+
+      layer <- list(
+        type = "ImageLayer",
         name = name,
         visible = TRUE,
         parameters = list(
