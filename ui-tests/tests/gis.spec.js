@@ -124,4 +124,55 @@ test.describe("examples/gis.ipynb", () => {
     // The map is still rendered after mutating the document from R.
     await expect(displayCell.locator(".ol-viewport canvas").first()).toBeVisible();
   });
+
+  test("edits a layer's opacity from the UI and reads it back from R", async ({
+    page,
+    tmpPath,
+  }) => {
+    await page.notebook.openByPath(`${tmpPath}/${fileName}`);
+    await page.notebook.activate(fileName);
+
+    const nb = loadClearedNotebook();
+
+    await runCellOk(page, cellIndexBySource(nb, 'library("jupytergis")'));
+    const displayCell = await runCellOk(page, cellIndexBySource(nb, "GISDocument$new"));
+    await expect(displayCell.locator(".ol-viewport canvas").first()).toBeVisible({
+      timeout: 60_000,
+    });
+
+    // Add the Google Satellite raster layer (opacity 0.6) from R.
+    await runCellOk(page, cellIndexBySource(nb, "doc$add_raster_layer"));
+
+    // The side panels render inside the GISDocument output, overlaying the map.
+    const output = cellOutput(displayCell);
+
+    // The map is rendered; open the Layers panel. (We don't click the canvas:
+    // the panels overlay it, so they intercept pointer events on the map.)
+    await expect(output.locator(".ol-viewport canvas").first()).toBeVisible();
+    await output.getByRole("tab", { name: "Layers" }).click();
+
+    // Select the Google Satellite layer by clicking its title row, which owns
+    // the selection handler (a click sets `model.selected` to this layer).
+    await output
+      .locator(".jp-gis-layerItem", { hasText: "Google Satellite" })
+      .locator(".jp-gis-layerTitle")
+      .click();
+
+    // Get opacity of Google layer
+    const opacityInput = output
+      .getByRole("slider")
+      .locator('xpath=following-sibling::input[@type="number"]');
+    await expect(opacityInput).toHaveValue("0.6");
+
+    // Change opacity from the UI
+    await opacityInput.fill("0.3");
+    await opacityInput.press("Enter");
+    await opacityInput.blur();
+    // Wait to check CRDT opacity has changed in R
+    const opacityCellIndex = cellIndexBySource(nb, "$parameters$opacity");
+    await expect(async () => {
+      const opacityCell = await runCellOk(page, opacityCellIndex);
+      await expect(cellOutput(opacityCell)).toContainText("0.3", { timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
+  });
 });
