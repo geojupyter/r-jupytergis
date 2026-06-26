@@ -67,5 +67,4 @@ ui-tests/playwright-report/
 .stylelintcache
 
 # nbconvert tests
-examples/gis-render-test.ipynb
 examples/*.nbconvert.ipynb
