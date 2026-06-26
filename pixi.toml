@@ -5,7 +5,7 @@ channels = ["conda-forge"]
 platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
 
 [environments]
-dev = { features = ["test", "dev"], solve-group = "default" }
+dev = { features = ["test", "dev", "ui-tests"], solve-group = "default" }
 
 [dependencies]
 r-base = ">=4.1"
@@ -68,3 +68,26 @@ check = { depends-on = ["check-typos"] }
 # Pre-commit easy alias
 pre-commit = "pre-commit"
 pre-commit-all = "pre-commit run --all-files"
+
+[feature.ui-tests.dependencies]
+nodejs = "26.*"
+
+[feature.ui-tests.tasks.install-ui-tests-deps]
+cwd = "ui-tests"
+cmd = "npm ci"
+description = "Install Playwright and Galata"
+inputs = ["ui-tests/package.json", "ui-tests/package-lock.json"]
+outputs = ["ui-tests/node_modules"]
+
+[feature.ui-tests.tasks.install-browsers]
+cwd = "ui-tests"
+cmd = "npx playwright install"
+description = "Install web browsers through playwright."
+depends-on = ["install-ui-tests-deps"]
+
+[feature.ui-tests.tasks.test-ui]
+cwd = "ui-tests"
+cmd = "npx --no playwright test"
+description = "Run Galata/Playwright UI tests."
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
+depends-on = ["install-ui-tests-deps", "install-browsers"]

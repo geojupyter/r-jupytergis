@@ -1,4 +1,4 @@
-name: Test
+name: Test and linters
 
 on:
   push:
@@ -11,6 +11,22 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  checks:
+    name: Code checks and formatters
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.69.0
+          cache: true
+          environments: dev
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      - name: Check linters and formatting
+        run: pixi run pre-commit-all
+
   test:
     name: R unit tests
     runs-on: ${{ matrix.os }}
@@ -28,8 +44,6 @@ jobs:
           cache: true
           environments: dev
           cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-      - name: Check linters and formatting
-        run: pixi run pre-commit-all
       - name: Run unit tests
         run: pixi run test
       - name: Run example notebook

@@ -1,0 +1,49 @@
+name: Notebook Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ui-tests:
+    name: Playwright UI tests
+    runs-on: ubuntu-latest
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/playwright/browsers
+      PLAYWRIGHT_HTML_OUTPUT_DIR: ${{ github.workspace }}/playwright/report
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Setup Pixi
+        uses: prefix-dev/setup-pixi@v0.9.6
+        with:
+          pixi-version: v0.69.0
+          cache: true
+          environments: dev
+          cache-write: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+      - name: Install UI test dependencies
+        run: pixi run install-ui-tests-deps
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PLAYWRIGHT_BROWSERS_PATH }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('ui-tests/package-lock.json') }}
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pixi run install-browsers
+      - name: Run UI tests
+        run: pixi run test-ui --reporter=github,html
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: ${{ env.PLAYWRIGHT_HTML_OUTPUT_DIR }}
+          retention-days: 30
