@@ -35,9 +35,9 @@ jupyterlab-kernelspy = "*"
 [feature.dev.tasks.install-jupytergis]
 cmd = "R CMD INSTALL ."
 
-[feature.dev.tasks.serve-jupyter]
+[feature.dev.tasks.jupyter]
 cmd = "jupyter"
-env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/.Rprofile" }
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
 
 [feature.dev.tasks.test-example]
 cmd = """
@@ -50,6 +50,7 @@ jupyter nbconvert \
   examples/gis.ipynb  && \
 grep 'application/vnd.jupyter.ywidget-view+json' examples/gis-render-test.ipynb
 """
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
 depends-on = ["install-jupytergis"]
 
 [feature.dev.tasks]
