@@ -27,6 +27,7 @@ r-devtools = "*"
 r-roxygen2 = "==8.0.0"
 air = "*"
 typos = "*"
+biome = ">=2.3"
 pre-commit = "*"
 jupyterlab = ">=4"
 jupyterlab-kernelspy = "*"
@@ -57,7 +58,8 @@ doc = "rm -rf man/ && Rscript -e 'devtools::document()'"
 # Formatters
 fmt-air = "air format R/ tests/"
 fmt-tombi = "tombi format"
-fmt = { depends-on = ["fmt-air", "fmt-tombi"] }
+fmt-biome = "biome format --write"
+fmt = { depends-on = ["fmt-air", "fmt-biome", "fmt-tombi"] }
 # Checkers
 check-r = "Rscript -e 'devtools::check()'"  # Not ready
 check-typos = "typos --write-changes"

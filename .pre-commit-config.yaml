@@ -1,6 +1,6 @@
 # We run pre-commit in our CI with our local tasks.
 # We should just remove pre-commit.ci
-ci: { skip: [pixi-doc, pixi-format-air, pixi-check-typos] }
+ci: { skip: [pixi-doc, pixi-format-air, pixi-biome-format, pixi-check-typos] }
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -12,6 +12,10 @@ repos:
       - id: check-toml
       - id: check-merge-conflict
       - id: mixed-line-ending
+  - repo: https://github.com/kynan/nbstripout
+    rev: 0.9.1
+    hooks:
+      - id: nbstripout
   - repo: local
     hooks:
       - id: pixi-doc
@@ -26,6 +30,12 @@ repos:
         language: system
         types_or: [r]
         pass_filenames: false
+      - id: pixi-biome-format
+        name: "Run Biome format through pixi"
+        entry: pixi run fmt-biome
+        language: system
+        types_or: [javascript, jsx, ts, tsx, json, css]
+        exclude: "(^|/)package\\.json$"
       - id: pixi-check-typos
         name: "Run typos through pixi"
         entry: pixi run check-typos
