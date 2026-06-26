@@ -13,8 +13,10 @@ Imports:
     R6,
     yr,
     hera,
-    ywidgets
+    ywidgets,
+    methods
 Suggests:
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    openeo (>= 1.4.0)
 Config/testthat/edition: 3
 Config/roxygen2/version: 8.0.0
