@@ -1,6 +1,6 @@
 <p align="center"><img width="100" src="https://raw.githubusercontent.com/geojupyter/jupytergis/main/packages/base/style/icons/logo.svg"></p>
 <p align="center"><sub>Logo by <a href="https://github.com/IsabelParedes">Isabel Paredes</a></sub></p>
-<h1 align="center">JupyterGIS</h1>
+<h1 align="center">JupyterGIS R client</h1>
 
 This is the R client for [JupyterGIS](https://github.com/geojupyter/jupytergis/).
 It shares the same JS frontend as the Python client, as well as the same underlying
