@@ -82,6 +82,13 @@
   if (nzchar(name_without_ext)) name_without_ext else filename
 }
 
+#' Normalize image corner coordinates.
+#
+#' @param coordinates Image corners as either:
+#'   - an `n x 2` matrix (`[lon, lat]` per row), or
+#'   - a list of `[lon, lat]` pairs.
+#' @return A list of coordinate pairs, each as `list(lon, lat)`.
+#' @noRd
 .normalize_coordinates <- function(coordinates) {
   if (is.matrix(coordinates)) {
     coordinates <- lapply(seq_len(nrow(coordinates)), function(i) {
@@ -311,14 +318,6 @@ GISDocument <- R6::R6Class(
         path <- as.character(path)
       }
 
-      if (is.null(path) && is.null(data)) {
-        stop("Cannot create a GeoJSON layer without data")
-      }
-
-      if (!is.null(path) && !is.null(data)) {
-        stop("Cannot set GeoJSON layer data and path at the same time")
-      }
-
       parameters <- list()
 
       if (!is.null(path)) {
@@ -376,15 +375,11 @@ GISDocument <- R6::R6Class(
     #' @param opacity Layer opacity in [0, 1].
     #' @return The new layer id.
     add_image_layer = function(
-      url = NULL,
-      coordinates = NULL,
+      url,
+      coordinates,
       name = NULL,
       opacity = 1
     ) {
-      if (is.null(url) || is.null(coordinates)) {
-        stop("URL and Coordinates are required")
-      }
-
       coordinates <- .normalize_coordinates(coordinates)
 
       source_id <- .uuid()

@@ -199,12 +199,7 @@ ephemeral in-memory document.}
   Add a Image Layer to the document.
   \subsection{Usage}{
     \if{html}{\out{<div class="r">}}
-    \preformatted{GISDocument$add_image_layer(
-  url = NULL,
-  coordinates = NULL,
-  name = NULL,
-  opacity = 1
-)}
+    \preformatted{GISDocument$add_image_layer(url, coordinates, name = NULL, opacity = 1)}
     \if{html}{\out{</div>}}
   }
   \subsection{Arguments}{
