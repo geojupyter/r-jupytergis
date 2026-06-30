@@ -34,7 +34,7 @@ repos:
         name: "Run Biome format through pixi"
         entry: pixi run fmt-biome
         language: system
-        types_or: [javascript, jsx, ts, tsx, json, css]
+        types_or: [javascript, jsx, ts, tsx, css]
         exclude: "(^|/)package\\.json$"
       - id: pixi-check-typos
         name: "Run typos through pixi"
