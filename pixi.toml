@@ -47,11 +47,13 @@ jupyter nbconvert \
   --execute \
   --ExecutePreprocessor.store_widget_state=False \
   --output gis-render-test.ipynb \
-  examples/gis.ipynb  && \
-grep 'application/vnd.jupyter.ywidget-view+json' examples/gis-render-test.ipynb
+  examples/gis.ipynb
 """
 env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
-depends-on = ["install-jupytergis"]
+
+[feature.dev.tasks.test-notebooks]
+cmd = "bash tests/notebooks/run.sh"
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
 
 [feature.dev.tasks]
 # Document
