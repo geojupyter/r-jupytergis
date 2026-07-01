@@ -1,0 +1,176 @@
+{
+  "layerTree": [
+    "4a0703b3-ed56-4158-8a2e-e008c3d0fee2",
+    "02f8c75c-59c3-6ef5-a33c-79174a486c58",
+    "d787c26b-92c6-7de3-818d-a36a578491fc",
+    "19beefe0-7a23-9ca9-c61b-b39a3383629d",
+    "5b324346-a94b-3004-129d-cdd30d8949b9",
+    "d217519a-565c-78c1-aac0-6645901294c8"
+  ],
+  "layers": {
+    "02f8c75c-59c3-6ef5-a33c-79174a486c58": {
+      "name": "Google Satellite",
+      "parameters": {
+        "color": {},
+        "opacity": 0.7,
+        "source": "28c8fc46-9f72-6fc1-8e32-fb1c6721c6db"
+      },
+      "type": "RasterLayer",
+      "visible": true
+    },
+    "19beefe0-7a23-9ca9-c61b-b39a3383629d": {
+      "name": "Buildings",
+      "parameters": {
+        "opacity": 1.0,
+        "source": "e92b9d9b-3b7c-1942-03a2-5a1785d64c6c"
+      },
+      "type": "VectorTileLayer",
+      "visible": true
+    },
+    "4a0703b3-ed56-4158-8a2e-e008c3d0fee2": {
+      "name": "OpenStreetMap.Mapnik Layer",
+      "parameters": {
+        "opacity": 1.0,
+        "source": "60da082e-8b70-4fa2-b2f0-48524468fea0"
+      },
+      "type": "RasterLayer",
+      "visible": true
+    },
+    "5b324346-a94b-3004-129d-cdd30d8949b9": {
+      "name": "ne_10m_roads",
+      "parameters": {
+        "opacity": 1.0,
+        "source": "d2c1f7f8-cf25-2cf6-f609-32968c2a1a89"
+      },
+      "type": "VectorLayer",
+      "visible": true
+    },
+    "d217519a-565c-78c1-aac0-6645901294c8": {
+      "name": "radar",
+      "parameters": {
+        "opacity": 1.0,
+        "source": "bee3630d-a7bb-e5a5-be1a-c37a54cabd66"
+      },
+      "type": "ImageLayer",
+      "visible": true
+    },
+    "d787c26b-92c6-7de3-818d-a36a578491fc": {
+      "name": "OSM from R",
+      "parameters": {
+        "color": {},
+        "opacity": 1.0,
+        "source": "c58d3ff9-8343-ed91-9297-60e89b4e1f49"
+      },
+      "type": "RasterLayer",
+      "visible": true
+    }
+  },
+  "metadata": {},
+  "options": {
+    "bearing": 0.0,
+    "extent": [
+      -1203890.725414254,
+      4904707.209846843,
+      3776751.1372877145,
+      7457459.585159272
+    ],
+    "latitude": 48.44425230193289,
+    "longitude": 11.556199159459881,
+    "pitch": 0.0,
+    "projection": "EPSG:3857",
+    "zoom": 5.081102073966508
+  },
+  "schemaVersion": "0.5.0",
+  "sources": {
+    "28c8fc46-9f72-6fc1-8e32-fb1c6721c6db": {
+      "name": "Google Satellite Source",
+      "parameters": {
+        "attribution": "Google",
+        "bounds": [],
+        "htmlAttribution": "Google",
+        "maxZoom": 24.0,
+        "minZoom": 0.0,
+        "provider": "",
+        "url": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+        "urlParameters": {}
+      },
+      "type": "RasterSource"
+    },
+    "60da082e-8b70-4fa2-b2f0-48524468fea0": {
+      "name": "OpenStreetMap.Mapnik",
+      "parameters": {
+        "attribution": "(C) OpenStreetMap contributors",
+        "bounds": [],
+        "htmlAttribution": "",
+        "interpolate": false,
+        "maxZoom": 19.0,
+        "minZoom": 0.0,
+        "provider": "OpenStreetMap",
+        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "urlParameters": {}
+      },
+      "type": "RasterSource"
+    },
+    "bee3630d-a7bb-e5a5-be1a-c37a54cabd66": {
+      "name": "radar Source",
+      "parameters": {
+        "coordinates": [
+          [
+            -80.425,
+            46.437
+          ],
+          [
+            -71.516,
+            46.437
+          ],
+          [
+            -71.516,
+            37.936
+          ],
+          [
+            -80.425,
+            37.936
+          ]
+        ],
+        "path": "https://maplibre.org/maplibre-gl-js/docs/assets/radar.gif"
+      },
+      "type": "ImageSource"
+    },
+    "c58d3ff9-8343-ed91-9297-60e89b4e1f49": {
+      "name": "OSM from R Source",
+      "parameters": {
+        "attribution": "",
+        "bounds": [],
+        "htmlAttribution": "",
+        "maxZoom": 24.0,
+        "minZoom": 0.0,
+        "provider": "",
+        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "urlParameters": {}
+      },
+      "type": "RasterSource"
+    },
+    "d2c1f7f8-cf25-2cf6-f609-32968c2a1a89": {
+      "name": "ne_10m_roads Source",
+      "parameters": {
+        "path": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_roads.geojson"
+      },
+      "type": "GeoJSONSource"
+    },
+    "e92b9d9b-3b7c-1942-03a2-5a1785d64c6c": {
+      "name": "Buildings Source",
+      "parameters": {
+        "attribution": "Planetary Computer",
+        "bounds": [],
+        "htmlAttribution": "Planetary Computer",
+        "maxZoom": 24.0,
+        "minZoom": 0.0,
+        "provider": "",
+        "url": "https://planetarycomputer.microsoft.com/api/data/v1/vector/collections/ms-buildings/tilesets/global-footprints/tiles/{z}/{x}/{y}",
+        "urlParameters": []
+      },
+      "type": "VectorTileSource"
+    }
+  },
+  "stories": {}
+}
