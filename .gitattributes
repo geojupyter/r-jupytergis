@@ -1,0 +1,4 @@
+# SCM syntax highlighting & preventing 3-way merges
+
+pixi.lock merge=binary linguist-language=YAML linguist-generated=true
+ui-tests/package-lock.json text merge=union linguist-vendored linguist-generated

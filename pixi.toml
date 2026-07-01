@@ -5,7 +5,7 @@ channels = ["conda-forge/label/jupytergis_prerelease", "conda-forge"]
 platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
 
 [environments]
-dev = { features = ["test", "dev"], solve-group = "default" }
+dev = { features = ["test", "dev", "ui-tests"], solve-group = "default" }
 titler-openeo = { features = ["titiler-openeo"], no-default-feature = true }
 
 [dependencies]
@@ -29,16 +29,17 @@ r-devtools = "*"
 r-roxygen2 = "==8.0.0"
 air = "*"
 typos = "*"
+biome = ">=2.3"
 pre-commit = "*"
-jupyterlab = ">=4"
+jupyterlab = "4.6.*"  # Must be compatible with galata
 jupyterlab-kernelspy = "*"
 
 [feature.dev.tasks.install-jupytergis]
 cmd = "R CMD INSTALL ."
 
-[feature.dev.tasks.serve-jupyter]
+[feature.dev.tasks.jupyter]
 cmd = "jupyter"
-env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/.Rprofile" }
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
 
 [feature.dev.tasks.test-example]
 cmd = """
@@ -48,10 +49,13 @@ jupyter nbconvert \
   --execute \
   --ExecutePreprocessor.store_widget_state=False \
   --output gis-render-test.ipynb \
-  examples/gis.ipynb  && \
-grep 'application/vnd.jupyter.ywidget-view+json' examples/gis-render-test.ipynb
+  examples/gis.ipynb
 """
-depends-on = ["install-jupytergis"]
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
+
+[feature.dev.tasks.test-notebooks]
+cmd = "bash tests/notebooks/run.sh"
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
 
 [feature.dev.tasks]
 # Document
@@ -59,7 +63,8 @@ doc = "rm -rf man/ && Rscript -e 'devtools::document()'"
 # Formatters
 fmt-air = "air format R/ tests/"
 fmt-tombi = "tombi format"
-fmt = { depends-on = ["fmt-air", "fmt-tombi"] }
+fmt-biome = "biome format --write"
+fmt = { depends-on = ["fmt-air", "fmt-biome", "fmt-tombi"] }
 # Checkers
 check-r = "Rscript -e 'devtools::check()'"  # Not ready
 check-typos = "typos --write-changes"
@@ -67,6 +72,29 @@ check = { depends-on = ["check-typos"] }
 # Pre-commit easy alias
 pre-commit = "pre-commit"
 pre-commit-all = "pre-commit run --all-files"
+
+[feature.ui-tests.dependencies]
+nodejs = "26.*"
+
+[feature.ui-tests.tasks.install-ui-tests-deps]
+cwd = "ui-tests"
+cmd = "npm ci"
+description = "Install Playwright and Galata"
+inputs = ["ui-tests/package.json", "ui-tests/package-lock.json"]
+outputs = ["ui-tests/node_modules"]
+
+[feature.ui-tests.tasks.install-browsers]
+cwd = "ui-tests"
+cmd = "npx playwright install"
+description = "Install web browsers through playwright."
+depends-on = ["install-ui-tests-deps"]
+
+[feature.ui-tests.tasks.test-ui]
+cwd = "ui-tests"
+cmd = "npx --no playwright test"
+description = "Run Galata/Playwright UI tests."
+env = { R_PROFILE_USER = "$PIXI_PROJECT_ROOT/dev/Rprofile" }
+depends-on = ["install-ui-tests-deps", "install-browsers"]
 
 ####################
 #  Titiler OpenEO  #

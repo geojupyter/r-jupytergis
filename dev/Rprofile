@@ -1,0 +1,10 @@
+# Dev startup profile: load the in-tree package with devtools.
+# Loaded via R_PROFILE_USER (see pixi tasks), so resolve the package root from
+# this file's own location.
+local({
+  root <- dirname(dirname(normalizePath(Sys.getenv("R_PROFILE_USER")))) # dev/Rprofile -> dev -> root
+
+  if (requireNamespace("devtools", quietly = TRUE)) {
+    try(devtools::load_all(root, quiet = TRUE))
+  }
+})

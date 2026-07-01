@@ -55,3 +55,16 @@ rsconnect/
 .jupyter/
 .jupyter_ystore.db
 **/.ipynb_checkpoints
+
+# Integration tests
+ui-tests/node_modules/
+ui-tests/test-results/
+ui-tests/playwright-report/
+
+# Web files
+*.log
+.eslintcache
+.stylelintcache
+
+# nbconvert tests
+examples/*.nbconvert.ipynb
