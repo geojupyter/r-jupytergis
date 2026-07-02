@@ -132,6 +132,10 @@ test.describe("examples/gis.ipynb", () => {
     await page.notebook.openByPath(`${tmpPath}/${fileName}`);
     await page.notebook.activate(fileName);
 
+    await page.evaluate(() => {
+      document.body.style.zoom = "0.5";
+    });
+
     const nb = loadClearedNotebook();
 
     await runCellOk(page, cellIndexBySource(nb, 'library("jupytergis")'));
@@ -146,17 +150,14 @@ test.describe("examples/gis.ipynb", () => {
     // The side panels render inside the GISDocument output, overlaying the map.
     const output = cellOutput(displayCell);
 
-    // The map is rendered; open the Layers panel. (We don't click the canvas:
-    // the panels overlay it, so they intercept pointer events on the map.)
     await expect(output.locator(".ol-viewport canvas").first()).toBeVisible();
-    await output.getByRole("tab", { name: "Layers" }).click();
 
-    // Select the Google Satellite layer by clicking its title row, which owns
-    // the selection handler (a click sets `model.selected` to this layer).
-    await output
-      .locator(".jp-gis-layerItem", { hasText: "Google Satellite" })
-      .locator(".jp-gis-layerTitle")
-      .click();
+    // Adding the layer from R auto-selects it, so we don't click it in the tree
+    // (clicking the already-selected row would toggle the selection off). With
+    // the page zoomed out the side panels collapse into a single tab bar, so
+    // the selected layer's properties live behind the Object Properties tab;
+    // open it to reveal the opacity control.
+    await output.getByRole("tab", { name: "Object Properties" }).click();
 
     // Get opacity of Google layer
     const opacityInput = output

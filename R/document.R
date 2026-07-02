@@ -114,7 +114,8 @@
 #'
 #' Comm-backed widget mirroring `jupytergis_lab.GISDocument`. Exposes the
 #' document's CRDT roots (`layers`, `sources`, `options`, `layerTree`,
-#' `metadata`) as fields, and provides `add_raster_layer()`.
+#' `metadata`) as fields, and provides `add_raster_layer()` and
+#' `add_openeo_tile_layer()`.
 #'
 #' @export
 GISDocument <- R6::R6Class(
@@ -163,6 +164,31 @@ GISDocument <- R6::R6Class(
         "metadata",
         yr::Prelim$map(list())
       )$read()
+
+      # Seed the view defaults, mirroring the Python GISDocument
+      # (jupytergis_lab gis_document.py). Without this the map never renders:
+      # the frontend only mounts its OpenLayers canvas after it observes a
+      # change on the `options` map (`initialSyncReady` resolves from the
+      # options observer), so an empty `options` leaves a toolbar but no map.
+      #
+      # We must *write* the defaults in a transaction rather than pass them as
+      # the storage prelim above: register_storage's `get_or_insert_map()`
+      # keeps only the prelim's type and drops its contents, so a seeded prelim
+      # would still sync empty.
+      self$with_write(function(trans) {
+        defaults <- list(
+          latitude = 0,
+          longitude = 0,
+          zoom = 0,
+          bearing = 0,
+          pitch = 0,
+          projection = "EPSG:3857",
+          storyMapPresentationMode = FALSE
+        )
+        for (key in names(defaults)) {
+          self$options$insert(trans, key, yr::Prelim$any(defaults[[key]]))
+        }
+      })
     },
 
     #' @description Write a source, layer, and layerTree entry to the document.
@@ -247,6 +273,67 @@ GISDocument <- R6::R6Class(
       )
 
       self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Add an openEO process-graph tile layer to the document.
+    #'
+    #' Mirrors `jupytergis_lab.GISDocument.add_openeo_tile_layer`: the source
+    #' carries the flat process graph plus the backend url and session bearer
+    #' token, rendered via titiler-openeo on the frontend.
+    #' @param graph An openEO `Graph`, or a datacube / result `ProcessNode`
+    #'   (e.g. from `openeo::save_result()`) coercible to a `Graph`.
+    #' @param connection An `OpenEOClient` (`openeo::connect()`/`login()`).
+    #'   Defaults to `openeo::active_connection()`; passed separately because an
+    #'   R process graph, unlike the Python one, does not carry its connection.
+    #' @param name Display name for the layer.
+    #' @param opacity Layer opacity in [0, 1].
+    #' @param zoom_to_extent Whether to fit the map view to the process graph's
+    #'   `spatial_extent`. The titiler-openeo backend serves tiles only within
+    #'   the requested extent and returns HTTP 404 ("no data for the given
+    #'   extents") for tiles outside it — which is what a zoomed-out initial
+    #'   view requests. Fitting to the extent makes the layer load on open.
+    #'   Ignored when the graph declares no spatial extent.
+    #' @return The new layer id.
+    add_openeo_tile_layer = function(
+      graph,
+      connection = NULL,
+      name = "OpenEO Tiles",
+      opacity = 1,
+      zoom_to_extent = TRUE
+    ) {
+      source <- .openeo_tile_source(graph, connection, name)
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      layer <- list(
+        type = "OpenEOTileLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = opacity
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+
+      # Fit the view to the data extent. The frontend's view follows
+      # `options.useExtent` + `options.extent` (in the EPSG:3857 view
+      # projection), calling `View.fit(extent)`. Without this the view stays at
+      # the default world zoom, where the openEO backend has no tiles to serve.
+      if (isTRUE(zoom_to_extent)) {
+        extent <- .openeo_spatial_extent(source$parameters$processGraph)
+        if (!is.null(extent)) {
+          view_extent <- .openeo_view_extent(extent)
+          self$with_write(function(trans) {
+            self$options$insert(trans, "extent", yr::Prelim$any(view_extent))
+            self$options$insert(trans, "useExtent", yr::Prelim$any(TRUE))
+          })
+        }
+      }
+
+      layer_id
     },
 
     #' @description Add a Vectortile Layer to the document.

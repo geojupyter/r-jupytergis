@@ -6,7 +6,8 @@
 \description{
 Comm-backed widget mirroring `jupytergis_lab.GISDocument`. Exposes the
 document's CRDT roots (`layers`, `sources`, `options`, `layerTree`,
-`metadata`) as fields, and provides `add_raster_layer()`.
+`metadata`) as fields, and provides `add_raster_layer()` and
+`add_openeo_tile_layer()`.
 }
 \section{Super classes}{
 \code{\link[ywidgets:WidgetBase]{ywidgets::WidgetBase}} -> \code{\link[ywidgets:YRootWidget]{ywidgets::YRootWidget}} -> \code{ywidgets::.CommRootWidgetBase} -> \code{\link[ywidgets:CommRootWidget]{ywidgets::CommRootWidget}} -> \code{GISDocument}
@@ -32,6 +33,7 @@ document's CRDT roots (`layers`, `sources`, `options`, `layerTree`,
     \item \href{#method-GISDocument-initialize}{\code{GISDocument$new()}}
     \item \href{#method-GISDocument-.add_source_layer}{\code{GISDocument$.add_source_layer()}}
     \item \href{#method-GISDocument-add_raster_layer}{\code{GISDocument$add_raster_layer()}}
+    \item \href{#method-GISDocument-add_openeo_tile_layer}{\code{GISDocument$add_openeo_tile_layer()}}
     \item \href{#method-GISDocument-add_vectortile_layer}{\code{GISDocument$add_vectortile_layer()}}
     \item \href{#method-GISDocument-add_geojson_layer}{\code{GISDocument$add_geojson_layer()}}
     \item \href{#method-GISDocument-add_image_layer}{\code{GISDocument$add_image_layer()}}
@@ -118,6 +120,50 @@ ephemeral in-memory document.}
       \item{\code{attribution}}{Attribution text.}
       \item{\code{opacity}}{Layer opacity in [0, 1].}
       \item{\code{url_parameters}}{Extra URL parameters for tile requests.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_openeo_tile_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_openeo_tile_layer}{}}}
+\subsection{\code{GISDocument$add_openeo_tile_layer()}}{
+  Add an openEO process-graph tile layer to the document.
+
+Mirrors `jupytergis_lab.GISDocument.add_openeo_tile_layer`: the source
+carries the flat process graph plus the backend url and session bearer
+token, rendered via titiler-openeo on the frontend.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_openeo_tile_layer(
+  graph,
+  connection = NULL,
+  name = "OpenEO Tiles",
+  opacity = 1,
+  zoom_to_extent = TRUE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{graph}}{An openEO `Graph`, or a datacube / result `ProcessNode`
+(e.g. from `openeo::save_result()`) coercible to a `Graph`.}
+      \item{\code{connection}}{An `OpenEOClient` (`openeo::connect()`/`login()`).
+Defaults to `openeo::active_connection()`; passed separately because an
+R process graph, unlike the Python one, does not carry its connection.}
+      \item{\code{name}}{Display name for the layer.}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
+      \item{\code{zoom_to_extent}}{Whether to fit the map view to the process graph's
+`spatial_extent`. The titiler-openeo backend serves tiles only within
+the requested extent and returns HTTP 404 ("no data for the given
+extents") for tiles outside it — which is what a zoomed-out initial
+view requests. Fitting to the extent makes the layer load on open.
+Ignored when the graph declares no spatial extent.}
     }
     \if{html}{\out{</div>}}
   }
