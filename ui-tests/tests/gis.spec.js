@@ -132,10 +132,6 @@ test.describe("examples/gis.ipynb", () => {
     await page.notebook.openByPath(`${tmpPath}/${fileName}`);
     await page.notebook.activate(fileName);
 
-    await page.evaluate(() => {
-      document.body.style.zoom = "0.5";
-    });
-
     const nb = loadClearedNotebook();
 
     await runCellOk(page, cellIndexBySource(nb, 'library("jupytergis")'));
@@ -152,14 +148,6 @@ test.describe("examples/gis.ipynb", () => {
 
     await expect(output.locator(".ol-viewport canvas").first()).toBeVisible();
 
-    // Adding the layer from R auto-selects it, so we don't click it in the tree
-    // (clicking the already-selected row would toggle the selection off). With
-    // the page zoomed out the side panels collapse into a single tab bar, so
-    // the selected layer's properties live behind the Object Properties tab;
-    // open it to reveal the opacity control.
-    await output.getByRole("tab", { name: "Object Properties" }).click();
-
-    // Get opacity of Google layer
     const opacityInput = output
       .getByRole("slider")
       .locator('xpath=following-sibling::input[@type="number"]');

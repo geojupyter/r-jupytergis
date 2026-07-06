@@ -14,5 +14,7 @@ module.exports = {
   use: {
     ...baseConfig.use,
     baseURL: "http://127.0.0.1:53729",
+    // A wide viewport keeps JupyterGIS in its two-column panel layout
+    viewport: { width: 1920, height: 1080 },
   },
 };
