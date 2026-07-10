@@ -82,6 +82,28 @@
   if (nzchar(name_without_ext)) name_without_ext else filename
 }
 
+# List table names in a GeoPackage for a given data type ("features" or "tiles").
+# Only works for local files; requires RSQLite.
+.get_gpkg_layers <- function(path, data_type = "features") {
+  if (grepl("^https?://", path)) {
+    stop(
+      "`table_names` must be provided when `path` is a URL, ",
+      "as remote GeoPackage files cannot be introspected."
+    )
+  }
+  if (!file.exists(path)) {
+    stop("GeoPackage file not found: ", path)
+  }
+  con <- DBI::dbConnect(RSQLite::SQLite(), path)
+  on.exit(DBI::dbDisconnect(con))
+  res <- DBI::dbGetQuery(
+    con,
+    "SELECT table_name FROM gpkg_contents WHERE data_type = ?",
+    params = list(data_type)
+  )
+  res$table_name
+}
+
 #' Normalize image corner coordinates.
 #
 #' @param coordinates Image corners as either:
@@ -496,6 +518,174 @@ GISDocument <- R6::R6Class(
       )
 
       self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Add a GeoParquet Layer to the document.
+    #' @param path The path to the GeoParquet file to embed into the jGIS file.
+    #' @param name The name that will be used for the object in the document.
+    #' @param opacity Layer opacity in [0, 1].
+    #' @return The new layer id.
+    add_geoparquet_layer = function(
+      path,
+      name = NULL,
+      opacity = 1
+    ) {
+      if (inherits(path, "Path")) {
+        path <- as.character(path)
+      }
+
+      # Extract name from path if not provided
+      if (is.null(name)) {
+        name <- .extract_layer_name(path)
+      }
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      source <- list(
+        type = "GeoParquetSource",
+        name = paste0(name, " Source"),
+        parameters = list(
+          path = path
+        )
+      )
+
+      layer <- list(
+        type = "VectorLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = opacity
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Add a GeoPackage Vector Layer to the document.
+    #' @param path The path to the GeoPackage file to embed into the jGIS file.
+    #' @param table_names A character vector of table names to create layers
+    #'   for. If NULL, all feature tables in the GeoPackage are used (local
+    #'   files only).
+    #' @param name The name that will be used for the object in the document.
+    #' @param type The type of the vector layer to create: "circle", "fill",
+    #'   or "line".
+    #' @param opacity Layer opacity in [0, 1].
+    #' @return A list of the new layer ids (one per table).
+    add_geopackage_vector_layer = function(
+      path,
+      table_names = NULL,
+      name = NULL,
+      type = c("line", "circle", "fill"),
+      opacity = 1
+    ) {
+      type <- match.arg(type)
+
+      if (is.null(table_names)) {
+        table_names <- .get_gpkg_layers(path, "features")
+      }
+
+      # Extract name from path if not provided
+      if (is.null(name)) {
+        name <- .extract_layer_name(path)
+      }
+
+      projection <- "EPSG:3857"
+
+      layer_ids <- list()
+
+      for (table_name in table_names) {
+        source <- list(
+          type = "GeoPackageVectorSource",
+          name = paste(name, table_name, "Source"),
+          parameters = list(
+            path = path,
+            tables = table_name,
+            projection = projection
+          )
+        )
+
+        layer <- list(
+          type = "VectorLayer",
+          name = paste(name, table_name, "Layer"),
+          visible = TRUE,
+          parameters = list(
+            source = NULL, # filled below
+            type = type,
+            opacity = opacity
+          )
+        )
+
+        source_id <- paste0(.uuid(), "/", table_name)
+        layer_id <- paste0(.uuid(), "/", table_name)
+        layer$parameters$source <- source_id
+
+        self$.add_source_layer(source_id, source, layer_id, layer)
+        layer_ids[[length(layer_ids) + 1]] <- layer_id
+      }
+
+      layer_ids
+    },
+
+    #' @description Add a GeoPackage Raster Layer to the document
+    #' @param path The path to the GeoPackage file.
+    #' @param table_names A list of table names to create layers for.
+    #' @param name The name that will be used for the object in the document.
+    #' @param attribution The attribution.
+    #' @param opacity The opacity, between 0 and 1.
+    add_geopackage_raster_layer = function(
+      path,
+      table_names = NULL,
+      name = NULL,
+      attribution = "",
+      opacity = 1
+    ) {
+      # Accept a single comma-separated string, matching the Python API
+      if (is.character(table_names) && length(table_names) == 1) {
+        table_names <- trimws(strsplit(table_names, ",")[[1]])
+      }
+
+      # If no tables given, discover the raster ("tiles") tables in the file
+      if (is.null(table_names) || length(table_names) == 0) {
+        table_names <- .get_gpkg_layers(path, "tiles")
+      }
+
+      if (is.null(name)) {
+        name <- .extract_layer_name(path)
+      }
+
+      layer_ids <- character(0)
+
+      for (table_name in table_names) {
+        source_id <- paste0(.uuid(), "/", table_name)
+        layer_id <- paste0(.uuid(), "/", table_name)
+
+        source <- list(
+          type = "GeoPackageRasterSource",
+          name = paste0(name, " ", table_name, " Source"),
+          parameters = list(
+            path = path,
+            tables = table_name
+          )
+        )
+
+        layer <- list(
+          type = "RasterLayer",
+          name = paste0(name, " ", table_name, " Layer"),
+          visible = TRUE,
+          parameters = list(
+            source = source_id,
+            opacity = as.numeric(opacity),
+            attribution = attribution
+          )
+        )
+
+        self$.add_source_layer(source_id, source, layer_id, layer)
+        layer_ids <- c(layer_ids, layer_id)
+      }
+
+      layer_ids
     }
   )
 )

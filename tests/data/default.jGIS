@@ -1,30 +1,17 @@
 {
   "layerTree": [
     "4a0703b3-ed56-4158-8a2e-e008c3d0fee2",
-    "02f8c75c-59c3-6ef5-a33c-79174a486c58",
-    "d787c26b-92c6-7de3-818d-a36a578491fc",
-    "19beefe0-7a23-9ca9-c61b-b39a3383629d",
-    "5b324346-a94b-3004-129d-cdd30d8949b9",
-    "d217519a-565c-78c1-aac0-6645901294c8"
+    "7db81237-a579-4daa-938f-5e61fdfb17e7",
+    "0bfee293-9e2f-4434-8c5a-c90d19836bab"
   ],
   "layers": {
-    "02f8c75c-59c3-6ef5-a33c-79174a486c58": {
-      "name": "Google Satellite",
+    "0bfee293-9e2f-4434-8c5a-c90d19836bab": {
+      "name": "WaymarkedTrails.hiking Layer",
       "parameters": {
-        "color": {},
-        "opacity": 0.7,
-        "source": "28c8fc46-9f72-6fc1-8e32-fb1c6721c6db"
+        "opacity": 0.6,
+        "source": "82691e55-f9e2-43be-8a07-3ae0409af7b4"
       },
       "type": "RasterLayer",
-      "visible": true
-    },
-    "19beefe0-7a23-9ca9-c61b-b39a3383629d": {
-      "name": "Buildings",
-      "parameters": {
-        "opacity": 1.0,
-        "source": "e92b9d9b-3b7c-1942-03a2-5a1785d64c6c"
-      },
-      "type": "VectorTileLayer",
       "visible": true
     },
     "4a0703b3-ed56-4158-8a2e-e008c3d0fee2": {
@@ -36,30 +23,11 @@
       "type": "RasterLayer",
       "visible": true
     },
-    "5b324346-a94b-3004-129d-cdd30d8949b9": {
-      "name": "ne_10m_roads",
+    "7db81237-a579-4daa-938f-5e61fdfb17e7": {
+      "name": "NASAGIBS.ModisTerraTrueColorCR Layer",
       "parameters": {
-        "opacity": 1.0,
-        "source": "d2c1f7f8-cf25-2cf6-f609-32968c2a1a89"
-      },
-      "type": "VectorLayer",
-      "visible": true
-    },
-    "d217519a-565c-78c1-aac0-6645901294c8": {
-      "name": "radar",
-      "parameters": {
-        "opacity": 1.0,
-        "source": "bee3630d-a7bb-e5a5-be1a-c37a54cabd66"
-      },
-      "type": "ImageLayer",
-      "visible": true
-    },
-    "d787c26b-92c6-7de3-818d-a36a578491fc": {
-      "name": "OSM from R",
-      "parameters": {
-        "color": {},
-        "opacity": 1.0,
-        "source": "c58d3ff9-8343-ed91-9297-60e89b4e1f49"
+        "opacity": 0.3,
+        "source": "52252f5d-3cb7-45a8-a724-5793bf9950ec"
       },
       "type": "RasterLayer",
       "visible": true
@@ -69,30 +37,36 @@
   "options": {
     "bearing": 0.0,
     "extent": [
-      -1203890.725414254,
-      4904707.209846843,
-      3776751.1372877145,
-      7457459.585159272
+      -382516.64112580917,
+      5085864.543062618,
+      2328055.912740292,
+      6862268.218955172
     ],
-    "latitude": 48.44425230193289,
-    "longitude": 11.556199159459881,
+    "latitude": 47.195641286772855,
+    "longitude": 8.738538317730255,
     "pitch": 0.0,
     "projection": "EPSG:3857",
-    "zoom": 5.081102073966508
+    "zoom": 5.722083946960902
   },
   "schemaVersion": "0.5.0",
   "sources": {
-    "28c8fc46-9f72-6fc1-8e32-fb1c6721c6db": {
-      "name": "Google Satellite Source",
+    "52252f5d-3cb7-45a8-a724-5793bf9950ec": {
+      "name": "NASAGIBS.ModisTerraTrueColorCR",
       "parameters": {
-        "attribution": "Google",
+        "attribution": "Imagery provided by services from the Global Imagery Browse Services (GIBS), operated by the NASA/GSFC/Earth Science Data and Information System (ESDIS) with funding provided by NASA/HQ.",
         "bounds": [],
-        "htmlAttribution": "Google",
-        "maxZoom": 24.0,
-        "minZoom": 0.0,
-        "provider": "",
-        "url": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-        "urlParameters": {}
+        "htmlAttribution": "",
+        "interpolate": false,
+        "maxZoom": 9.0,
+        "minZoom": 1.0,
+        "provider": "NASAGIBS",
+        "url": "https://map1.vis.earthdata.nasa.gov/wmts-webmerc/{variant}/default/{time}/{tilematrixset}{max_zoom}/{z}/{y}/{x}.{format}",
+        "urlParameters": {
+          "format": "jpg",
+          "tilematrixset": "GoogleMapsCompatible_Level",
+          "time": "2024-07-07",
+          "variant": "MODIS_Terra_CorrectedReflectance_TrueColor"
+        }
       },
       "type": "RasterSource"
     },
@@ -111,65 +85,22 @@
       },
       "type": "RasterSource"
     },
-    "bee3630d-a7bb-e5a5-be1a-c37a54cabd66": {
-      "name": "radar Source",
+    "82691e55-f9e2-43be-8a07-3ae0409af7b4": {
+      "name": "WaymarkedTrails.hiking",
       "parameters": {
-        "coordinates": [
-          [
-            -80.425,
-            46.437
-          ],
-          [
-            -71.516,
-            46.437
-          ],
-          [
-            -71.516,
-            37.936
-          ],
-          [
-            -80.425,
-            37.936
-          ]
-        ],
-        "path": "https://maplibre.org/maplibre-gl-js/docs/assets/radar.gif"
-      },
-      "type": "ImageSource"
-    },
-    "c58d3ff9-8343-ed91-9297-60e89b4e1f49": {
-      "name": "OSM from R Source",
-      "parameters": {
-        "attribution": "",
+        "attribution": "Map data: (C) OpenStreetMap contributors | Map style: (C) waymarkedtrails.org (CC-BY-SA)",
         "bounds": [],
         "htmlAttribution": "",
-        "maxZoom": 24.0,
+        "interpolate": false,
+        "maxZoom": 18.0,
         "minZoom": 0.0,
-        "provider": "",
-        "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "urlParameters": {}
+        "provider": "WaymarkedTrails",
+        "url": "https://tile.waymarkedtrails.org/{variant}/{z}/{x}/{y}.png",
+        "urlParameters": {
+          "variant": "hiking"
+        }
       },
       "type": "RasterSource"
-    },
-    "d2c1f7f8-cf25-2cf6-f609-32968c2a1a89": {
-      "name": "ne_10m_roads Source",
-      "parameters": {
-        "path": "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_roads.geojson"
-      },
-      "type": "GeoJSONSource"
-    },
-    "e92b9d9b-3b7c-1942-03a2-5a1785d64c6c": {
-      "name": "Buildings Source",
-      "parameters": {
-        "attribution": "Planetary Computer",
-        "bounds": [],
-        "htmlAttribution": "Planetary Computer",
-        "maxZoom": 24.0,
-        "minZoom": 0.0,
-        "provider": "",
-        "url": "https://planetarycomputer.microsoft.com/api/data/v1/vector/collections/ms-buildings/tilesets/global-footprints/tiles/{z}/{x}/{y}",
-        "urlParameters": []
-      },
-      "type": "VectorTileSource"
     }
   },
   "stories": {}
