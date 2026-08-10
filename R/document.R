@@ -591,6 +591,7 @@ GISDocument <- R6::R6Class(
         name <- .extract_layer_name(path)
       }
 
+      # EPSG:3857 = Web Mercator, the default projection for web maps (units: meters)
       projection <- "EPSG:3857"
 
       layer_ids <- list()

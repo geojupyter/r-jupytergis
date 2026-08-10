@@ -68,3 +68,7 @@ ui-tests/playwright-report/
 
 # nbconvert tests
 examples/*.nbconvert.ipynb
+
+# Generated test/example artifacts
+tests/data/default.jGIS
+examples/france_hiking.jGIS
