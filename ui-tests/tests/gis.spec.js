@@ -148,15 +148,19 @@ test.describe("examples/gis.ipynb", () => {
 
     await expect(output.locator(".ol-viewport canvas").first()).toBeVisible();
 
-    const opacityInput = output
-      .getByRole("slider")
-      .locator('xpath=following-sibling::input[@type="number"]');
-    await expect(opacityInput).toHaveValue("0.6");
+    // The opacity control is a Radix slider: a role="slider" thumb carrying
+    // aria-valuenow as a percentage, driven by the keyboard (no text input).
+    const opacitySlider = output
+      .locator(".jp-gis-layerItem", { hasText: "Google Satellite" })
+      .getByRole("slider");
+    await expect(opacitySlider).toHaveAttribute("aria-valuenow", "60");
 
-    // Change opacity from the UI
-    await opacityInput.fill("0.3");
-    await opacityInput.press("Enter");
-    await opacityInput.blur();
+    // Change opacity from the UI: the large step is 10x the 1% step.
+    await opacitySlider.focus();
+    for (let i = 0; i < 3; i++) {
+      await opacitySlider.press("PageDown");
+    }
+    await expect(opacitySlider).toHaveAttribute("aria-valuenow", "30");
     // Wait to check CRDT opacity has changed in R
     const opacityCellIndex = cellIndexBySource(nb, "$parameters$opacity");
     await expect(async () => {
