@@ -687,6 +687,359 @@ GISDocument <- R6::R6Class(
       }
 
       layer_ids
+    },
+
+    #' @description Add a GeoTIFF Layer to the document.
+    #' @param path Path to the GeoTIFF file or URL.
+    #' @param name Display name for the layer.
+    #' @param attribution Attribution text. Currently unused by the frontend
+    #'   (matches the Python API, where this parameter is accepted but not
+    #'   written to the source either).
+    #' @param opacity Layer opacity in [0, 1].
+    #' @param zoom_to_extent Whether to fit the map view to the raster extent
+    #'   (requires terra; only has an effect for local files terra can read).
+    #' @return The new layer id.
+    add_geotiff_layer = function(
+      path,
+      name = NULL,
+      attribution = "",
+      opacity = 1,
+      zoom_to_extent = TRUE
+    ) {
+      if (inherits(path, "Path")) {
+        path <- as.character(path)
+      }
+
+      if (is.null(name)) {
+        name <- .extract_layer_name(path)
+      }
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      # Build source parameters expected by the frontend
+      parameters <- list(
+        urls = list(list(url = path)),
+        normalize = TRUE,
+        wrapX = FALSE
+      )
+
+      # Try to introspect local files with terra if available, to fill in the
+      # `projection` override and to compute an extent for `zoom_to_extent`.
+      # GeoTiffSource has `additionalProperties: false` and does not have
+      # `bounds`/`bands`/`nodata` properties, so only `projection` (and only
+      # when resolvable) may be added to `parameters` here.
+      bounds <- NULL
+      if (
+        !grepl("^https?://", path) && requireNamespace("terra", quietly = TRUE)
+      ) {
+        try(
+          {
+            r <- terra::rast(path)
+            crs <- terra::crs(r, proj = TRUE)
+            if (!is.na(crs) && nzchar(crs)) {
+              parameters$projection <- crs
+              # Attempt to reproject the extent to EPSG:3857 for the web view.
+              try(
+                {
+                  r3857 <- terra::project(r, "EPSG:3857")
+                  ext3857 <- terra::ext(r3857)
+                  bounds <- as.list(as.double(
+                    c(ext3857$xmin, ext3857$ymin, ext3857$xmax, ext3857$ymax)
+                  ))
+                },
+                silent = TRUE
+              )
+            }
+          },
+          silent = TRUE
+        )
+      }
+
+      source <- list(
+        type = "GeoTiffSource",
+        name = paste0(name, " Source"),
+        parameters = parameters
+      )
+
+      layer <- list(
+        type = "GeoTiffLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = as.numeric(opacity)
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+
+      if (isTRUE(zoom_to_extent) && !is.null(bounds)) {
+        self$with_write(function(trans) {
+          self$options$insert(trans, "extent", yr::Prelim$any(bounds))
+          self$options$insert(trans, "useExtent", yr::Prelim$any(TRUE))
+        })
+      }
+
+      layer_id
+    },
+
+    #' @description Add a GeoZarr Layer to the document.
+    #' @param url URL of the GeoZarr store.
+    #' @param bands Character vector of named band identifiers to load (e.g.
+    #'   `c("b04", "b03", "b02")`). When `NULL` or empty, all bands are
+    #'   loaded in their stored order.
+    #' @param name Display name for the layer.
+    #' @param opacity Layer opacity in [0, 1].
+    #' @param gamma Gamma correction applied to all bands.
+    #' @param wrap_x Whether to render tiles beyond the tile grid extent.
+    #' @return The new layer id.
+    add_geozarr_layer = function(
+      url,
+      bands = NULL,
+      name = "Zarr Layer",
+      opacity = 1,
+      gamma = 1,
+      wrap_x = FALSE
+    ) {
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      source <- list(
+        type = "GeoZarrSource",
+        name = paste0(name, " Source"),
+        parameters = list(
+          url = url,
+          bands = if (is.null(bands)) list() else as.list(bands),
+          wrapX = wrap_x
+        )
+      )
+
+      layer <- list(
+        type = "GeoZarrLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = as.numeric(opacity),
+          gamma = as.numeric(gamma)
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Add a Hillshade Layer to the document.
+    #' @param url URL of the hillshade tile provider.
+    #' @param name Display name for the layer. If NULL, derived from the URL.
+    #' @param url_parameters Extra URL parameters for tile requests.
+    #' @param attribution Attribution text.
+    #' @return The new layer id.
+    add_hillshade_layer = function(
+      url,
+      name = NULL,
+      url_parameters = NULL,
+      attribution = ""
+    ) {
+      if (is.null(name)) {
+        name <- .extract_layer_name(url)
+      }
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      source <- list(
+        type = "RasterDemSource",
+        name = paste0(name, " Source"),
+        parameters = list(
+          url = url,
+          attribution = attribution,
+          urlParameters = if (is.null(url_parameters)) {
+            structure(list(), names = character(0))
+          } else {
+            url_parameters
+          }
+        )
+      )
+
+      layer <- list(
+        type = "HillshadeLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
+    },
+
+    #' @description Fetch a WMS `GetCapabilities` document and list its
+    #'   available top-level layers.
+    #'
+    #' Mirrors `jupytergis_lab.GISDocument.get_wms_available_layers`: calls
+    #' `?SERVICE=WMS&VERSION=...&REQUEST=GetCapabilities` and parses the
+    #' direct child `Layer` elements of `Capability > Layer` for their
+    #' `Name`/`Title`, matching the frontend's own WMS URL input behavior.
+    #' Use the returned `name` values as `layer_name` in
+    #' `add_wms_tile_layer()`.
+    #' @param wms_url Base WMS service URL (without SERVICE/REQUEST
+    #'   parameters), e.g. "https://ows.terrestris.de/osm/service".
+    #' @param version WMS version to request.
+    #' @param timeout_s Request timeout in seconds.
+    #' @return A list of `list(name = ..., title = ...)` entries.
+    get_wms_available_layers = function(
+      wms_url,
+      version = "1.3.0",
+      timeout_s = 30
+    ) {
+      if (
+        !is.character(wms_url) ||
+          length(wms_url) != 1 ||
+          !nzchar(trimws(wms_url))
+      ) {
+        stop("`wms_url` must be a non-empty string")
+      }
+
+      base_url <- strsplit(trimws(wms_url), "?", fixed = TRUE)[[1]][1]
+      if (!endsWith(base_url, "/")) {
+        base_url <- paste0(base_url, "/")
+      }
+      capabilities_url <- paste0(
+        base_url,
+        "?SERVICE=WMS&VERSION=",
+        version,
+        "&REQUEST=GetCapabilities"
+      )
+
+      handle <- curl::new_handle(timeout = timeout_s)
+      resp <- curl::curl_fetch_memory(capabilities_url, handle = handle)
+      if (resp$status_code >= 400) {
+        stop(sprintf(
+          "Failed to fetch WMS capabilities: HTTP %d",
+          resp$status_code
+        ))
+      }
+
+      doc <- tryCatch(
+        xml2::read_xml(rawToChar(resp$content)),
+        error = function(e) {
+          stop(sprintf(
+            "Failed to parse WMS GetCapabilities XML from %s",
+            capabilities_url
+          ))
+        }
+      )
+      # Strip namespaces so plain tag names (e.g. "Layer") match regardless
+      # of the WMS server's namespace prefix, mirroring the Python
+      # implementation's `local_name()` helper.
+      xml2::xml_ns_strip(doc)
+
+      service_exception <- xml2::xml_find_first(
+        doc,
+        ".//ServiceExceptionReport"
+      )
+      if (!is.na(service_exception)) {
+        msg <- trimws(xml2::xml_text(service_exception))
+        stop(if (nzchar(msg)) msg else "Failed to fetch WMS capabilities.")
+      }
+
+      capability_el <- xml2::xml_find_first(doc, ".//Capability")
+      if (is.na(capability_el)) {
+        return(list())
+      }
+      root_layer_el <- xml2::xml_find_first(capability_el, "./Layer")
+      if (is.na(root_layer_el)) {
+        return(list())
+      }
+
+      results <- list()
+      for (layer_el in xml2::xml_find_all(root_layer_el, "./Layer")) {
+        name <- trimws(xml2::xml_text(xml2::xml_find_first(
+          layer_el,
+          ".//Name"
+        )))
+        title <- trimws(xml2::xml_text(xml2::xml_find_first(
+          layer_el,
+          ".//Title"
+        )))
+        if (is.na(name)) {
+          name <- ""
+        }
+        if (is.na(title)) {
+          title <- ""
+        }
+        if (nzchar(name) || nzchar(title)) {
+          results[[length(results) + 1]] <- list(name = name, title = title)
+        }
+      }
+      results
+    },
+
+    #' @description Add a WMS tile layer to the document.
+    #' @param url Base WMS service URL (without SERVICE/REQUEST parameters),
+    #'   e.g. "https://ows.terrestris.de/osm/service".
+    #' @param layer_name WMS layer name to request (from GetCapabilities `Name`).
+    #' @param name Display name for the layer. If NULL, derived from the URL.
+    #' @param attribution Attribution text.
+    #' @param opacity Layer opacity in [0, 1].
+    #' @param interpolate Whether to interpolate between grid cells when
+    #'   overzooming.
+    #' @return The new layer id.
+    add_wms_tile_layer = function(
+      url,
+      layer_name,
+      name = NULL,
+      attribution = "",
+      opacity = 1,
+      interpolate = FALSE
+    ) {
+      if (!is.character(url) || length(url) != 1 || !nzchar(url)) {
+        stop("`url` must be a non-empty string")
+      }
+      if (
+        !is.character(layer_name) ||
+          length(layer_name) != 1 ||
+          !nzchar(layer_name)
+      ) {
+        stop("`layer_name` must be a non-empty string")
+      }
+
+      # Extract name from URL if not provided
+      if (is.null(name)) {
+        name <- .extract_layer_name(url)
+      }
+
+      # Normalize: strip any existing query string since the frontend adds
+      # the WMS params (LAYERS/TILED) itself.
+      base_url <- strsplit(trimws(url), "?", fixed = TRUE)[[1]][1]
+
+      source_id <- .uuid()
+      layer_id <- .uuid()
+
+      source <- list(
+        type = "WmsTileSource",
+        name = paste0(name, " Source"),
+        parameters = list(
+          url = base_url,
+          params = list(layers = layer_name),
+          attribution = attribution,
+          interpolate = interpolate
+        )
+      )
+
+      layer <- list(
+        type = "RasterLayer",
+        name = name,
+        visible = TRUE,
+        parameters = list(
+          source = source_id,
+          opacity = as.numeric(opacity),
+          color = structure(list(), names = character(0))
+        )
+      )
+
+      self$.add_source_layer(source_id, source, layer_id, layer)
     }
   )
 )

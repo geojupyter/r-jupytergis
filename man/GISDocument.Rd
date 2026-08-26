@@ -40,6 +40,11 @@ document's CRDT roots (`layers`, `sources`, `options`, `layerTree`,
     \item \href{#method-GISDocument-add_geoparquet_layer}{\code{GISDocument$add_geoparquet_layer()}}
     \item \href{#method-GISDocument-add_geopackage_vector_layer}{\code{GISDocument$add_geopackage_vector_layer()}}
     \item \href{#method-GISDocument-add_geopackage_raster_layer}{\code{GISDocument$add_geopackage_raster_layer()}}
+    \item \href{#method-GISDocument-add_geotiff_layer}{\code{GISDocument$add_geotiff_layer()}}
+    \item \href{#method-GISDocument-add_geozarr_layer}{\code{GISDocument$add_geozarr_layer()}}
+    \item \href{#method-GISDocument-add_hillshade_layer}{\code{GISDocument$add_hillshade_layer()}}
+    \item \href{#method-GISDocument-get_wms_available_layers}{\code{GISDocument$get_wms_available_layers()}}
+    \item \href{#method-GISDocument-add_wms_tile_layer}{\code{GISDocument$add_wms_tile_layer()}}
     \item \href{#method-GISDocument-clone}{\code{GISDocument$clone()}}
   }
 }
@@ -351,6 +356,180 @@ or "line".}
       \item{\code{opacity}}{The opacity, between 0 and 1.}
     }
     \if{html}{\out{</div>}}
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_geotiff_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_geotiff_layer}{}}}
+\subsection{\code{GISDocument$add_geotiff_layer()}}{
+  Add a GeoTIFF Layer to the document.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_geotiff_layer(
+  path,
+  name = NULL,
+  attribution = "",
+  opacity = 1,
+  zoom_to_extent = TRUE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{path}}{Path to the GeoTIFF file or URL.}
+      \item{\code{name}}{Display name for the layer.}
+      \item{\code{attribution}}{Attribution text. Currently unused by the frontend
+(matches the Python API, where this parameter is accepted but not
+written to the source either).}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
+      \item{\code{zoom_to_extent}}{Whether to fit the map view to the raster extent
+(requires terra; only has an effect for local files terra can read).}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_geozarr_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_geozarr_layer}{}}}
+\subsection{\code{GISDocument$add_geozarr_layer()}}{
+  Add a GeoZarr Layer to the document.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_geozarr_layer(
+  url,
+  bands = NULL,
+  name = "Zarr Layer",
+  opacity = 1,
+  gamma = 1,
+  wrap_x = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{url}}{URL of the GeoZarr store.}
+      \item{\code{bands}}{Character vector of named band identifiers to load (e.g.
+`c("b04", "b03", "b02")`). When `NULL` or empty, all bands are
+loaded in their stored order.}
+      \item{\code{name}}{Display name for the layer.}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
+      \item{\code{gamma}}{Gamma correction applied to all bands.}
+      \item{\code{wrap_x}}{Whether to render tiles beyond the tile grid extent.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_hillshade_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_hillshade_layer}{}}}
+\subsection{\code{GISDocument$add_hillshade_layer()}}{
+  Add a Hillshade Layer to the document.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_hillshade_layer(
+  url,
+  name = NULL,
+  url_parameters = NULL,
+  attribution = ""
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{url}}{URL of the hillshade tile provider.}
+      \item{\code{name}}{Display name for the layer. If NULL, derived from the URL.}
+      \item{\code{url_parameters}}{Extra URL parameters for tile requests.}
+      \item{\code{attribution}}{Attribution text.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-get_wms_available_layers"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-get_wms_available_layers}{}}}
+\subsection{\code{GISDocument$get_wms_available_layers()}}{
+  Fetch a WMS `GetCapabilities` document and list its
+  available top-level layers.
+
+Mirrors `jupytergis_lab.GISDocument.get_wms_available_layers`: calls
+`?SERVICE=WMS&VERSION=...&REQUEST=GetCapabilities` and parses the
+direct child `Layer` elements of `Capability > Layer` for their
+`Name`/`Title`, matching the frontend's own WMS URL input behavior.
+Use the returned `name` values as `layer_name` in
+`add_wms_tile_layer()`.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$get_wms_available_layers(
+  wms_url,
+  version = "1.3.0",
+  timeout_s = 30
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{wms_url}}{Base WMS service URL (without SERVICE/REQUEST
+parameters), e.g. "https://ows.terrestris.de/osm/service".}
+      \item{\code{version}}{WMS version to request.}
+      \item{\code{timeout_s}}{Request timeout in seconds.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A list of `list(name = ..., title = ...)` entries.
+  }
+}
+
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-GISDocument-add_wms_tile_layer"></a>}}
+\if{latex}{\out{\hypertarget{method-GISDocument-add_wms_tile_layer}{}}}
+\subsection{\code{GISDocument$add_wms_tile_layer()}}{
+  Add a WMS tile layer to the document.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{GISDocument$add_wms_tile_layer(
+  url,
+  layer_name,
+  name = NULL,
+  attribution = "",
+  opacity = 1,
+  interpolate = FALSE
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{url}}{Base WMS service URL (without SERVICE/REQUEST parameters),
+e.g. "https://ows.terrestris.de/osm/service".}
+      \item{\code{layer_name}}{WMS layer name to request (from GetCapabilities `Name`).}
+      \item{\code{name}}{Display name for the layer. If NULL, derived from the URL.}
+      \item{\code{attribution}}{Attribution text.}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
+      \item{\code{interpolate}}{Whether to interpolate between grid cells when
+overzooming.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    The new layer id.
   }
 }
 
