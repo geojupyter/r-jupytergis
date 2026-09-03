@@ -16,7 +16,6 @@ r-r6 = "*"
 xeus-r = ">=0.11.0"  # hera
 jupytergis = ">=0.16"
 r-openeo = "*"
-r-curl = "*"
 r-xml2 = "*"
 
 [feature.test.dependencies]

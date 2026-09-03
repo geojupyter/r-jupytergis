@@ -441,7 +441,8 @@ loaded in their stored order.}
   url,
   name = NULL,
   url_parameters = NULL,
-  attribution = ""
+  attribution = "",
+  opacity = 0.3
 )}
     \if{html}{\out{</div>}}
   }
@@ -452,6 +453,7 @@ loaded in their stored order.}
       \item{\code{name}}{Display name for the layer. If NULL, derived from the URL.}
       \item{\code{url_parameters}}{Extra URL parameters for tile requests.}
       \item{\code{attribution}}{Attribution text.}
+      \item{\code{opacity}}{Layer opacity in [0, 1].}
     }
     \if{html}{\out{</div>}}
   }

@@ -834,12 +834,14 @@ GISDocument <- R6::R6Class(
     #' @param name Display name for the layer. If NULL, derived from the URL.
     #' @param url_parameters Extra URL parameters for tile requests.
     #' @param attribution Attribution text.
+    #' @param opacity Layer opacity in [0, 1].
     #' @return The new layer id.
     add_hillshade_layer = function(
       url,
       name = NULL,
       url_parameters = NULL,
-      attribution = ""
+      attribution = "",
+      opacity = 0.3
     ) {
       if (is.null(name)) {
         name <- .extract_layer_name(url)
@@ -867,7 +869,8 @@ GISDocument <- R6::R6Class(
         name = name,
         visible = TRUE,
         parameters = list(
-          source = source_id
+          source = source_id,
+          opacity = as.numeric(opacity)
         )
       )
 
@@ -912,17 +915,25 @@ GISDocument <- R6::R6Class(
         "&REQUEST=GetCapabilities"
       )
 
-      handle <- curl::new_handle(timeout = timeout_s)
-      resp <- curl::curl_fetch_memory(capabilities_url, handle = handle)
-      if (resp$status_code >= 400) {
-        stop(sprintf(
-          "Failed to fetch WMS capabilities: HTTP %d",
-          resp$status_code
-        ))
-      }
+      old_timeout <- getOption("timeout")
+      options(timeout = timeout_s)
+      on.exit(options(timeout = old_timeout), add = TRUE)
+
+      con <- url(capabilities_url)
+      on.exit(try(close(con), silent = TRUE), add = TRUE)
+      xml_lines <- tryCatch(
+        readLines(con, warn = FALSE),
+        error = function(e) {
+          stop(sprintf(
+            "Failed to fetch WMS capabilities from %s: %s",
+            capabilities_url,
+            conditionMessage(e)
+          ))
+        }
+      )
 
       doc <- tryCatch(
-        xml2::read_xml(rawToChar(resp$content)),
+        xml2::read_xml(paste(xml_lines, collapse = "\n")),
         error = function(e) {
           stop(sprintf(
             "Failed to parse WMS GetCapabilities XML from %s",

@@ -15,7 +15,6 @@ Imports:
     hera,
     ywidgets,
     methods,
-    curl,
     xml2
 Suggests:
     testthat (>= 3.0.0),
